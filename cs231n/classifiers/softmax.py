@@ -33,8 +33,39 @@ def softmax_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    num_classes = W.shape[1]
+    num_train = X.shape[0]
+    # for a in range(W.shape[0]):
+    #     for b in range(num_classes):
+    #         for i in range(num_train):
+    #             scores = X[i].dot(W)
+    #             correct_class_score = scores[y[i]]
+    #             sum_exp = np.sum(np.exp(scores))
+    #             P = np.exp(correct_class_score)/sum_exp
+    #         dW[a,b] += X[i,b]*np.exp(scores[b])/sum_exp
+    #         if b == y[i]:
+    #             dW[a,b] += -X[i,a]
+                   
+    
+    for i in range(num_train):
+        scores = X[i].dot(W)
+        sum_exp = np.sum(np.exp(scores))
+        P = np.exp(scores[y[i]])/sum_exp
+        for b in range(num_classes):
+            dW[:,b] += X[i]*np.exp(scores[b])/sum_exp
+            if b == y[i]:
+                dW[:,y[i]] += -X[i]        
+        loss += -np.log(P)
 
+
+    # Right now the loss is a sum over all training examples, but we want it
+    # to be an average instead so we divide by num_train.
+    loss /= num_train
+    dW /= num_train
+
+    # Add regularization to the loss.
+    loss += reg * np.sum(W * W)
+    dW += reg*2*W
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW
@@ -49,7 +80,8 @@ def softmax_loss_vectorized(W, X, y, reg):
     # Initialize the loss and gradient to zero.
     loss = 0.0
     dW = np.zeros_like(W)
-
+    num_train = X.shape[0]
+    
     #############################################################################
     # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
     # Store the loss in loss and the gradient in dW. If you are not careful     #
@@ -58,8 +90,21 @@ def softmax_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
-
+    scores = X.dot(W)
+    sum_exp = np.sum(np.exp(scores), axis=1)
+    P = np.exp(scores[np.arange(len(scores)), y])/sum_exp
+    term1 = np.dot(X.transpose(), np.exp(scores)/np.expand_dims(sum_exp, axis=1))
+    
+    Y_delta = np.zeros((y.shape[0], W.shape[1]))
+    y_mask = np.expand_dims(y, axis=1)==np.expand_dims(np.arange(len(y)),axis=0)
+    y_mask = y_mask[:,:10]
+    Y_delta[y_mask]=1
+    
+    term2 = np.dot(-X.T, Y_delta)
+    dW = (term1+term2)/num_train + reg*2*W
+    
+    loss += np.sum(-np.log(P))/num_train
+    loss += reg * np.sum(W * W)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW
