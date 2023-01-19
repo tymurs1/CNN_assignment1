@@ -114,7 +114,6 @@ def svm_loss_vectorized(W, X, y, reg):
     y_mask = np.expand_dims(y, axis=1)==np.expand_dims(np.arange(len(y)),axis=0)
     y_mask = y_mask[:,:10]
     Y_delta[y_mask]=1
-    # print(Y_delta*np.expand_dims(delta_sum_rows, axis=1))
     
     term2 = np.dot(X.T, Y_delta*np.expand_dims(-delta_sum_rows, axis=1))
     
